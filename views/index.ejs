@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>My Blog</h1>
+    <a id="newPostBtn" href="/new">New Post</a>
+    <ul id="postsList">
+      <% posts.forEach(post=> { %>
+        <li>
+          <h2>
+            <%=post.title%>
+          </h2>
+          <%
+        const dateObj = new Date(post.createdAt);
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const day = days[dateObj.getDay()];
+        const date = dateObj.getDate();
+        const month = months[dateObj.getMonth()];
+        const year = dateObj.getFullYear();
+
+        let hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+
+        const formattedDate = `${day}, ${date} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+%>
+
+<small>Posted on: <%= formattedDate %></small>
+
+
+          <p>
+            <%=post.content%>
+          </p>
+          <small>By: <%=post.author%> </small>
+          <a class="edit" href="/edit/<%= post.id %>">Edit</a>
+          <a class="delete" href="/posts/delete/<%= post.id %>">Delete</a>
+        </li>
+        <% }); %>
+    </ul>
+  </div>
+
+</body>
+
+</html>
