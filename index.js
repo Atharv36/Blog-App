@@ -3,8 +3,10 @@ import express from "express";
 import mongoose from "mongoose";
 import Post from "./models/post.js";
 import dotenv from "dotenv";
-dotenv.config();
+import multer from "multer";
+import path from "path";
 
+dotenv.config();
 
 mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("MongoDB connected"))
@@ -17,6 +19,18 @@ app.use(express.static("public"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/uploads'); // store files in public/uploads
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
 //Home route to get all posts
 app.get("/",async (req,res)=>{
   try{
@@ -34,18 +48,28 @@ app.get("/new", (req, res) => {
 });
 
 //route to post the info to db
-app.post("/new",(req,res)=>{
-  let {title,content,author}=req.body;
+app.post("/new", upload.single('image'), async (req, res) => {
+  let { title, content, author } = req.body;
+  let imageUrl = req.file ? "/uploads/" + req.file.filename : null;
+
   let newPost = new Post({
-    title:title,
-    content:content,
-    author:author,
-    createdAt:new Date(),
+    title,
+    content,
+    author,
+    createdAt: new Date(),
+    imageUrl,
   });
-  console.log(newPost);
-  newPost.save().then(()=>{console.log("Post was saved")}).catch(err=>{console.log(err)})
-  res.redirect("/")
-} )
+
+  try {
+    await newPost.save();
+    console.log("Post was saved");
+    res.redirect("/");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error saving post");
+  }
+});
+
 
 //route to get infor the particular post
 app.get("/edit/:id", async (req, res) => {
@@ -77,18 +101,35 @@ app.get("/posts/delete/:id" , async (req,res)=>{
 
 
 //route to edit the info of post
-app.post("/posts/:id", async (req, res) => {
-  console.log("called");
+app.post("/posts/:id", upload.single("image"), async (req, res) => {
   try {
-    let {id} = req.params;
-    let {title,content,author} =req.body;
-    let updatedPost = await Post.findByIdAndUpdate(id,{title:title,content:content,author:author},{ runValidators: true, new: true })
-    console.log(updatedPost);
+    const { id } = req.params;
+    const { title, content, author } = req.body;
+
+    // Build updated fields
+    const updatedFields = {
+      title,
+      content,
+      author,
+    };
+
+    // If a new image was uploaded, update imageUrl
+    if (req.file) {
+      updatedFields.imageUrl = "/uploads/" + req.file.filename;
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(id, updatedFields, {
+      runValidators: true,
+      new: true,
+    });
+
     res.redirect("/");
   } catch (error) {
+    console.error("Error updating post:", error);
     res.status(500).json({ message: "Error updating post" });
   }
 });
+
 app.use((req, res) => {
   res.status(404).render("404.ejs", { url: req.originalUrl });
 });

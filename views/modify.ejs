@@ -4,36 +4,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Blog</title>
+  <title><%= heading %></title>
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 
 <body>
   <div class="container">
-    <h1>
-      <%= heading %>
-    </h1>
+    <h1><%= heading %></h1>
 
     <% if (locals.post) { %>
-      <form id="editForm" method="post" action="/posts/<%=post.id%>">
-        <input type="text" name="title" value="<%=post.title %>">
-        <textarea name="content" rows="10"><%=post.content %></textarea>
-        <input type="text" name="author" value="<%=post.author %>">
-        <button class="full-width" type="submit">
-          <%= submit %>
-        </button>
-      </form>
-      <% } else {%>
-        <form id="newPostForm" method="post" action="/new">
-          <input type="text" name="title" placeholder="Title" required>
-          <textarea name="content" placeholder="Content" required rows="10"></textarea>
-          <input type="text" name="author" placeholder="Author" required>
-          <button class="full-width" type="submit">
-            <%= submit %>
-          </button>
-        </form>
+      <form id="editForm" method="post" action="/posts/<%=post.id%>" enctype="multipart/form-data">
+        <input type="text" name="title" value="<%=post.title %>" required>
+        <textarea name="content" rows="10" required><%=post.content %></textarea>
+        <input type="text" name="author" value="<%=post.author %>" required>
+        
+        <% if (post.imageUrl) { %>
+          <p>Current Image:</p>
+          <img src="<%= post.imageUrl %>" alt="Post Image" style="max-width: 100%; margin-bottom: 10px;">
         <% } %>
-
+      
+        <input type="file" name="image">
+        <button class="full-width" type="submit"><%= submit %></button>
+      </form>
+      
+    <% } else { %>
+      <form id="newPostForm" method="post" action="/new" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Title" required>
+        <textarea name="content" placeholder="Content" required rows="10"></textarea>
+        <input type="text" name="author" placeholder="Author" required>
+        <input type="file" name="image" accept="image/*">
+        <button class="full-width" type="submit"><%= submit %></button>
+      </form>
+    <% } %>
   </div>
 </body>
 

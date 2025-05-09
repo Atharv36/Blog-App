@@ -43,6 +43,15 @@
           <p>
             <%=post.content%>
           </p>
+
+<% if (post.imageUrl) { %>
+  <div class="image-container">
+    <img src="<%= post.imageUrl %>" alt="Post image">
+  </div>
+<% } %>
+
+
+          
           <small>By: <%=post.author%> </small>
           <a class="edit" href="/edit/<%= post.id %>">Edit</a>
           <a class="delete" href="/posts/delete/<%= post.id %>">Delete</a>
